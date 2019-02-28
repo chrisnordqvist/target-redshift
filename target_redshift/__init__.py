@@ -30,6 +30,8 @@ def main(config, input_stream=None):
         s3_config = config.get('target_s3')
         s3 = S3(s3_config.get('aws_access_key_id'),
                 s3_config.get('aws_secret_access_key'),
+                s3_config.get('aws_session_token'),
+                s3_config.get('region_name'),
                 s3_config.get('bucket'),
                 s3_config.get('key_prefix'))
 
@@ -43,7 +45,8 @@ def main(config, input_stream=None):
         )
 
         if input_stream:
-            target_tools.stream_to_target(input_stream, redshift_target, config=config)
+            target_tools.stream_to_target(
+                input_stream, redshift_target, config=config)
         else:
             target_tools.main(redshift_target)
 

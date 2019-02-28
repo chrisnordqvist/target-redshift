@@ -22,7 +22,8 @@ def _make_schema_nullable(schema):
     nullable_properties = nullable_schema['properties']
 
     for field in nullable_properties:
-        nullable_properties[field] = json_schema.make_nullable(nullable_properties[field])
+        nullable_properties[field] = json_schema.make_nullable(
+            nullable_properties[field])
 
     return nullable_schema
 
@@ -53,13 +54,15 @@ class RedshiftTarget(PostgresTarget):
     def write_batch(self, stream_buffer):
         # WARNING: Using mutability here as there's no simple way to copy the necessary data over
         nullable_stream_buffer = stream_buffer
-        nullable_stream_buffer.schema = _make_schema_nullable(stream_buffer.schema)
+        nullable_stream_buffer.schema = _make_schema_nullable(
+            stream_buffer.schema)
 
         return PostgresTarget.write_batch(self, nullable_stream_buffer)
 
     def upsert_table_helper(self, connection, table_schema, metadata, log_schema_changes=True):
         nullable_table_schema = deepcopy(table_schema)
-        nullable_table_schema['schema'] = _make_schema_nullable(nullable_table_schema['schema'])
+        nullable_table_schema['schema'] = _make_schema_nullable(
+            nullable_table_schema['schema'])
         return PostgresTarget.upsert_table_helper(self,
                                                   connection,
                                                   nullable_table_schema,
@@ -79,7 +82,8 @@ class RedshiftTarget(PostgresTarget):
         cur.execute(sql.SQL('{};').format(
             create_table_sql))
 
-        self._set_table_metadata(cur, name, {'version': metadata.get('version', None)})
+        self._set_table_metadata(
+            cur, name, {'version': metadata.get('version', None)})
 
         self.add_column_mapping(cur,
                                 name,
@@ -128,15 +132,17 @@ class RedshiftTarget(PostgresTarget):
             sql.Identifier(temp_table_name),
             sql.SQL(', ').join(map(sql.Identifier, columns)),
             sql.Literal('s3://{}/{}'.format(bucket, key)),
-            sql.Literal('aws_access_key_id={};aws_secret_access_key={}'.format(
+            sql.Literal('aws_access_key_id={};aws_secret_access_key={};token={}'.format(
                 credentials.get('aws_access_key_id'),
-                credentials.get('aws_secret_access_key'))),
+                credentials.get('aws_secret_access_key'),
+                credentials.get('aws_session_token'))),
             sql.Literal(RESERVED_NULL_DEFAULT))
 
         cur.execute(copy_sql)
 
         pattern = re.compile(SINGER_LEVEL.format('[0-9]+'))
-        subkeys = list(filter(lambda header: re.match(pattern, header) is not None, columns))
+        subkeys = list(filter(lambda header: re.match(
+            pattern, header) is not None, columns))
 
         update_sql = self._get_update_sql(remote_schema['name'],
                                           temp_table_name,

@@ -6,7 +6,7 @@ SEPARATOR = '__'
 
 
 class S3:
-    def __init__(self, aws_access_key_id, aws_secret_access_key, aws_session_token, bucket, key_prefix=''):
+    def __init__(self, aws_access_key_id, aws_secret_access_key, aws_session_token, region_name, bucket, key_prefix=''):
         self._credentials = {'aws_access_key_id': aws_access_key_id,
                              'aws_secret_access_key': aws_secret_access_key,
                              'aws_session_token': aws_session_token}
@@ -14,7 +14,8 @@ class S3:
             's3',
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
-            aws_session_token=aws_session_token)
+            aws_session_token=aws_session_token,
+            region_name=region_name)
         self.bucket = bucket
         self.key_prefix = key_prefix
 
@@ -45,7 +46,7 @@ class _EncodeBinaryReadable:
         else:
             max_bytes = None
         output = b''
-        while (max_bytes is not None and len(output) < max_bytes) or True:  ## TODO: overflow?
+        while (max_bytes is not None and len(output) < max_bytes) or True:  # TODO: overflow?
             line = self.input.read()
             if line == '':
                 return output
